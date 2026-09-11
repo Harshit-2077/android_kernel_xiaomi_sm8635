@@ -1,0 +1,106 @@
+
+name: 'Build Mixed (Kernel + Modules)'
+description: 'Builds the kernel Image and modules together'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential git curl wget python3-pip bc cpio flex bison \
+          openssl libelf-dev pahole lz4 zstd unzip p7zip 2to3 python-is-python3 \
+          libssl-dev gnupg gperf neofetch
+      shell: bash
+
+    - name: Download AOSP Clang (r487747c)
+      run: |
+        mkdir -p clang && cd clang
+        wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/5b0ef2cb80de68f31ed04c3c70e83c713e314c6d/clang-r563880c.tar.gz -O clang.tar.gz
+        tar -xf clang.tar.gz
+        cd ..
+      shell: bash
+
+    - name: Add Clang to PATH
+      run: echo "$GITHUB_WORKSPACE/clang/bin" >> "$GITHUB_PATH"
+      shell: bash
+
+    - name: Verify Clang
+      run: clang --version
+      shell: bash
+
+    - name: Fastfetch
+      run: neofetch
+      shell: bash
+
+    - name: Download and apply sysvipc KABI fix patch
+      run: |
+        curl -L "https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch" \
+          -o 001-sysvipc-fix.patch
+        curl -L "https://raw.githubusercontent.com/WildKernels/kernel_patches/main/common/bbrv3/0001-net-tcp-backport-BBRv3-to-android14-6.1.patch" \
+          -o 0001-net-tcp-backport-BBRv3-to-android14-6.1.patch
+        patch -p1 < 0001-net-tcp-backport-BBRv3-to-android14-6.1.patch
+        patch -p1 < 001-sysvipc-fix.patch
+      shell: bash
+
+    - name: Generate defconfig
+      run: |
+        make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 \
+          CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- \
+          gki_defconfig vendor/my.config
+      shell: bash
+
+    - name: Build Image
+      run: |
+        make ARCH=arm64 LLVM=1 LLVM_IAS=1 \
+          CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- \
+          O=out -j$(nproc) Image Image.gz
+      shell: bash
+
+    - name: mkdir
+      run: |
+        mkdir -p image
+        cp out/arch/arm64/boot/Image image/
+        cp out/arch/arm64/boot/Image.gz image/
+      shell: bash
+
+    - name: Upload Image artifacts & modules
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernel-image
+        path: |
+          image
+
+    - name: edit config
+      shell: bash
+      run: |
+        ./scripts/config --file out/.config \
+          -d MTD_OOPS
+
+    - name: olddefconfig
+      run: |
+        make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 \
+          CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- \
+          olddefconfig
+      shell: bash
+
+    - name: Build module
+      run: |
+        make ARCH=arm64 LLVM=1 LLVM_IAS=1 \
+          CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- \
+          O=out -j$(nproc) modules
+      shell: bash
+    
+    - name: mkdir
+      run: |
+        find out/ -name "*.ko" -exec cp {} . \;
+      shell: bash
+
+    - name: Upload Image artifacts & modules
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernel-image-full
+        path: |
+          image
+          *.ko
+          
