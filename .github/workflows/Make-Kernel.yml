@@ -1,0 +1,48 @@
+name: Make kernel
+permissions:
+  contents: write
+  actions: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Select type of Github release?'
+        required: true
+        type: choice
+        options:
+          - none
+          - Pre-release
+          - Release
+        default: none
+      build_target:
+        description: 'What do you want to build?'
+        required: true
+        type: choice
+        options:
+          - Kernel Only
+          - Modules Only
+          - Mixed Build
+        default: Mixed Build
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Kernel
+        id: build_kernel
+        if: ${{ inputs.build_target == 'Kernel Only' }}
+        uses: ./.github/kernel
+
+      - name: Build Kernel Modules
+        id: build_modules
+        if: ${{ inputs.build_target == 'Modules Only' }}
+        uses: ./.github/kernel_modules
+
+      - name: Build Mixed (Kernel + Modules)
+        id: build_mixed
+        if: ${{ inputs.build_target == 'Mixed Build' }}
+        uses: ./.github/kernel_mixed
+        
