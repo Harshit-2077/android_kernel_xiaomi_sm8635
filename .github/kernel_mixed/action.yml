@@ -54,6 +54,7 @@ runs:
       run: |
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 \
           CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- \
+          HOSTCFLAGS="-DUSE_PKCS11_ENGINE" \
           O=out -j$(nproc) Image Image.gz
       shell: bash
 
