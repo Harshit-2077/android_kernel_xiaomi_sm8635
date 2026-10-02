@@ -39,7 +39,7 @@ jobs:
       - name: Build Kernel Modules
         id: build_modules
         if: ${{ inputs.build_target == 'test' }}
-        uses: ./.github/kernel_modules
+        uses: ./.github/test
 
       - name: Build Mixed (Kernel + Modules)
         id: build_mixed
