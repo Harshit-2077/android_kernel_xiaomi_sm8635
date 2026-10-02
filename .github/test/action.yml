@@ -58,7 +58,12 @@ runs:
       run: |
         make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 \
           CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- \
-          gki_defconfig my/*.config
+          gki_defconfig \
+          my/droidspaces.config \
+          my/nethunter.config \
+          my/custom.config \
+          my/net.config \
+          my/features.config
       shell: bash
 
     - name: Build Image
