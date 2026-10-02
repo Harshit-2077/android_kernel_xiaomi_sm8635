@@ -43,6 +43,7 @@ runs:
       shell: bash
 
     - name: Fix tcp_bbr.c Clang constant-logical-operand errors
+      shell: bash
       run: |
         set -e
         FILE="net/ipv4/tcp_bbr.c"
