@@ -21,7 +21,7 @@ on:
         type: choice
         options:
           - Kernel Only
-          - Modules Only
+          - test
           - Mixed Build
         default: Mixed Build
 
@@ -38,7 +38,7 @@ jobs:
 
       - name: Build Kernel Modules
         id: build_modules
-        if: ${{ inputs.build_target == 'Modules Only' }}
+        if: ${{ inputs.build_target == 'test' }}
         uses: ./.github/kernel_modules
 
       - name: Build Mixed (Kernel + Modules)
