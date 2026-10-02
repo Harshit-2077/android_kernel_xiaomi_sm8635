@@ -33,9 +33,13 @@ runs:
       run: neofetch
       shell: bash
 
-    - name: Download and apply sysvipc KABI fix patch
+    - name: apply multiple patches
       run: |
-        patch -p1 < pa/*.patch
+        set -e
+        for p in pa/*.patch; do
+            echo "Applying $p"
+            patch -p1 < "$p" || { echo "Failed to apply $p"; exit 1; }
+        done
       shell: bash
 
     - name: Generate defconfig
