@@ -15,10 +15,7 @@ runs:
 
     - name: Download AOSP Clang (r487747c)
       run: |
-        mkdir -p clang && cd clang
-        wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/3f67b93ee7a50ae2a3cb34cc32d0589415cc0a9c/clang-r536225.tar.gz -O clang.tar.gz
-        tar -xf clang.tar.gz
-        cd ..
+        ls
       shell: bash
 
     - name: Add Clang to PATH
