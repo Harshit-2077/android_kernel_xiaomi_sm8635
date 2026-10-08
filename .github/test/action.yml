@@ -42,18 +42,6 @@ runs:
         done
       shell: bash
 
-    - name: Fix tcp_bbr.c Clang constant-logical-operand errors
-      shell: bash
-      run: |
-        set -e
-        FILE="net/ipv4/tcp_bbr.c"
-        sed -i \
-          -e 's/bbr_param(sk, ecn_factor) &&/!!bbr_param(sk, ecn_factor) \&\&/' \
-          -e 's/bbr->ecn_eligible && bbr_param(sk, ecn_thresh))/bbr->ecn_eligible \&\& !!bbr_param(sk, ecn_thresh))/' \
-          -e 's/bbr->ecn_in_round && bbr_param(sk, ecn_factor))/bbr->ecn_in_round \&\& !!bbr_param(sk, ecn_factor))/' \
-          "$FILE"
-        grep -n '!!bbr_param' "$FILE"
-
     - name: Generate defconfig
       run: |
         make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 \
